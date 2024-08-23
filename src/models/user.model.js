@@ -23,18 +23,21 @@ const userSchema = new Schema({
         trim:true, 
         index:true, 
     },
-    avater: {
+    avatar: {
         type:String,// cloudnery url
         required:true, 
     },
     coverImage: {
         type:String,
     },
-    watchHistory: {
-        type:Schema.Types.ObjectId,
-        ref:"Video"
-    },
-    passwords: {
+    // watchHistory is store in array stracture
+    watchHistory: [
+        {
+            type:Schema.Types.ObjectId,
+            ref:"Video",
+        },
+    ],
+    password: {
         type:String,
         required:[true,"password is required"]
     },
@@ -43,8 +46,8 @@ const userSchema = new Schema({
     }
 },{timestamps:true});
 userSchema.pre("save",async function(next){
-    if(!this.ismodified("password")) return next();
-    this.password=bcrypt.hash(this.password,10);
+    if(!this.isModified("password")) return next();
+    this.password=await bcrypt.hash(this.password,10);
     next();
 });
 userSchema.methods.isPasswordCorrect =async function(password){
