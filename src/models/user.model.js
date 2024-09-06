@@ -33,13 +33,8 @@ const userSchema = new Schema({
     coverImage: {
         type:String,
     },
-    // watchHistory is store in array stracture
-    watchHistory: [
-        {
-            type:Schema.Types.ObjectId,
-            ref:"Video",
-        },
-    ],
+   
+    
     password: {
         type:String,
         required:[true,"password is required"]

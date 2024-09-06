@@ -17,5 +17,8 @@ app.use(cookieParser());
 
 // router declreation 
 import userRouter from './routes/user.routes.js';
+import doctorRouter from './routes/doctor.routes.js';
 app.use("/api/v1/users",userRouter);
+app.use("/api/v1/doctor",doctorRouter);
+
 export {app}

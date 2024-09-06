@@ -31,13 +31,18 @@ const registerUser = asyncHandler(async (req, res) => {
   // remove password and refresh token from response
   //check for user creation
   //return res
-  const { fullName, email, userName, password } = req.body;
-  console.log("emal:", email);
-  if (
-    [fullName, email, userName, password].some((field) => field?.trim() === "")
-  ) {
-    throw new ApiError(400, "All fileds are required");
-  }
+   // Extract user details from frontend
+   const { fullName, email, userName, password} = req.body;
+
+   // Validate that all fields are not empty
+   if ([fullName, email, userName, password].some((field) => field?.trim() === "")) {
+     throw new ApiError(400, "All fields are required");
+   }
+ 
+   // Ensure the role is either "doctor" or "patient"
+   if (!["doctor", "patient"].includes(role)) {
+     throw new ApiError(400, "Invalid role specified");
+   }
   const existedUser = await User.findOne({
     $or: [{ email }, { userName }],
   });
@@ -70,15 +75,16 @@ const registerUser = asyncHandler(async (req, res) => {
     password,
     userName: userName.toLowerCase(),
   });
-  const createdUser = await User.findById(user.id).select(
+  const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );
   if (!createdUser) {
     throw new ApiError(500, "something went wrong while registering the user ");
   }
+  
   return res
     .status(200)
-    .json(new ApiResponse(200, createdUser, "User  registered successfully"));
+    .json(new ApiResponse(200, createdUser, `User  registered successfully `));
 });
 const loginUser = asyncHandler(async (req, res) => {
   // it extract the data from the request
@@ -148,7 +154,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken=req.cookies.refreshToken || req.body.refreshToken;
   // i think there some mistake 
-  if(incomingRefreshToken) {
+  if(!incomingRefreshToken) {
     throw new ApiError(401,"unauthorized request");
   }
   try {
@@ -178,5 +184,19 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   } catch (error) {
     throw new ApiError(401,error?.message|| "Invalid refresh token")
   }
+})
+const changeCurrentPasswords = asyncHandler(async (req, res) => {
+  const {oldPassword,newPassword}=req.body;
+ const user=await User.findById(req.user?.id);
+ const isPasswordCorrect = await User.isPasswordCorrect(oldPassword);
+ if(!isPasswordCorrect){
+  throw new ApiError(400,"Invalid old password");
+  user.password=newPassword;
+  await user.save({validateBeforeSave:false});
+  return res
+  .status(200)
+  .json(new ApiResponse(200,{},"change password successfully"))
+ }
+
 })
 export { registerUser, loginUser, logoutUser,refreshAccessToken };
