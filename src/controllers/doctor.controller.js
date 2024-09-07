@@ -14,55 +14,76 @@ const generateAccessAndRefreshTokens = async (doctorId) => {
     await doctor.save({ validateBeforeSave: false });
     return { accessToken, refreshToken };
   } catch (error) {
-    throw new ApiError(500, "Something went wrong while generating refresh and access tokens");
+    throw new ApiError(
+      500,
+      "Something went wrong while generating refresh and access tokens"
+    );
   }
 };
 
 const registerDoctor = asyncHandler(async (req, res) => {
-  const { fullName, email, doctorName, password } = req.body;
-  console.log(fullName);
-  console.log(doctorName);
-  console.log(email);
-  console.log(password);
-  if ([fullName, email, doctorName, password].some((field) => field?.trim() === "")) {
-    throw new ApiError(400, "All fields are required");
+  
+  try {
+    const { fullName, email, doctorName, password, specialization } = req.body;
+    console.log(fullName);
+    console.log(doctorName);
+    console.log(email);
+    console.log(password);
+    console.log(specialization);
+  
+    if (
+      [fullName, email, doctorName, password, specialization].some(
+        (field) => field?.trim() === ""
+      )
+    ) {
+      throw new ApiError(400, "All fields are required");
+    }
+
+    const existedDoctor = await Doctor.findOne({
+      $or: [{ email }, { doctorName }],
+    });
+
+    if (existedDoctor) {
+      throw new ApiError(409, "Doctor already exists");
+    }
+
+    const avatarLocalPath = req.files?.avatar?.[0]?.path;
+    const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
+    if (!avatarLocalPath) {
+      throw new ApiError(400, "Avatar is required");
+    }
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath);
+    const coverImage = coverImageLocalPath
+      ? await uploadOnCloudinary(coverImageLocalPath)
+      : "";
+
+    const doctor = await Doctor.create({
+      fullName,
+      avatar: avatar.url,
+      coverImage: coverImage?.url || "",
+      email,
+      password,
+      doctorName: doctorName.toLowerCase(),
+      specialization,
+    });
+
+    const createdDoctor = await Doctor.findById(doctor._id).select(
+      "-password -refreshToken"
+    );
+    if (!createdDoctor) {
+      throw new ApiError(500, "Error registering the Doctor");
+    }
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, createdDoctor, "Doctor registered successfully")
+      );
+  } catch (error) {
+    console.log(error);
+    return res.status(500).send("Server error");
   }
-
-  const existedDoctor = await Doctor.findOne({
-    $or: [{ email }, { doctorName }],
-  });
-
-  if (existedDoctor) {
-    throw new ApiError(409, "Doctor already exists");
-  }
-
-  const avatarLocalPath = req.files?.avatar?.[0]?.path;
-  const coverImageLocalPath = req.files?.coverImage?.[0]?.path;
-  if (!avatarLocalPath) {
-    throw new ApiError(400, "Avatar is required");
-  }
-
-  const avatar = await uploadOnCloudinary(avatarLocalPath);
-  const coverImage = coverImageLocalPath ? await uploadOnCloudinary(coverImageLocalPath) : "";
-
-
-  const doctor = await Doctor.create({
-    fullName,
-    avatar: avatar.url,
-    coverImage: coverImage?.url || "",
-    email,
-    password,
-    doctorName:doctorName.toLowerCase(),
-  });
-
-  const createdDoctor = await Doctor.findById(doctor.id).select("-password -refreshToken");
-  if (!createdDoctor) {
-    throw new ApiError(500, "Error registering the Doctor");
-  }
-
-  return res
-    .status(200)
-    .json(new ApiResponse(200, createdDoctor, "Doctor registered successfully"));
 });
 
 const loginDoctor = asyncHandler(async (req, res) => {
@@ -85,8 +106,12 @@ const loginDoctor = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid credentials");
   }
 
-  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(doctor._id);
-  const loggedInDoctor = await Doctor.findById(doctor._id).select("-password -refreshToken");
+  const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+    doctor._id
+  );
+  const loggedInDoctor = await Doctor.findById(doctor._id).select(
+    "-password -refreshToken"
+  );
 
   const options = {
     httpOnly: true,
@@ -97,7 +122,13 @@ const loginDoctor = asyncHandler(async (req, res) => {
     .status(200)
     .cookie("accessToken", accessToken, options)
     .cookie("refreshToken", refreshToken, options)
-    .json(new ApiResponse(200, { doctor: loggedInDoctor, accessToken, refreshToken }, "Doctor logged in successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        { doctor: loggedInDoctor, accessToken, refreshToken },
+        "Doctor logged in successfully"
+      )
+    );
 });
 
 const logoutDoctor = asyncHandler(async (req, res) => {
@@ -120,13 +151,17 @@ const logoutDoctor = asyncHandler(async (req, res) => {
 });
 
 const refreshAccessToken = asyncHandler(async (req, res) => {
-  const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
+  const incomingRefreshToken =
+    req.cookies.refreshToken || req.body.refreshToken;
   if (!incomingRefreshToken) {
     throw new ApiError(401, "Unauthorized request");
   }
 
   try {
-    const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET);
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET
+    );
     const doctor = await Doctor.findById(decodedToken?._id);
     if (!doctor) {
       throw new ApiError(401, "Invalid refresh token");
@@ -136,7 +171,8 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       throw new ApiError(401, "Refresh token is expired or used");
     }
 
-    const { accessToken, refreshToken: newRefreshToken } = await generateAccessAndRefreshTokens(doctor._id);
+    const { accessToken, refreshToken: newRefreshToken } =
+      await generateAccessAndRefreshTokens(doctor._id);
 
     const options = {
       httpOnly: true,
@@ -147,7 +183,13 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
       .status(200)
       .cookie("accessToken", accessToken, options)
       .cookie("refreshToken", newRefreshToken, options)
-      .json(new ApiResponse(200, { accessToken, refreshToken: newRefreshToken }, "Access token refreshed"));
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken, refreshToken: newRefreshToken },
+          "Access token refreshed"
+        )
+      );
   } catch (error) {
     throw new ApiError(401, error?.message || "Invalid refresh token");
   }
@@ -155,7 +197,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
 
 const changeCurrentPasswords = asyncHandler(async (req, res) => {
   const { oldPassword, newPassword } = req.body;
-  const doctor = await Doctor.findById(req.Doctor?.id);
+  const doctor = await Doctor.findById(req.Doctor?._id);
 
   const isPasswordCorrect = await doctor.isPasswordCorrect(oldPassword);
   if (!isPasswordCorrect) {
@@ -169,5 +211,18 @@ const changeCurrentPasswords = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, {}, "Password changed successfully"));
 });
+const getAllDoctors = asyncHandler(async (req, res) => {
+  const doctors = await Doctor.find().select("-password"); // Exclude sensitive fields like password
+  return res
+    .status(200)
+    .json(new ApiResponse(200, doctors, "Doctors fetched successfully"));
+});
 
-export { registerDoctor, loginDoctor, logoutDoctor, refreshAccessToken, changeCurrentPasswords };
+export {
+  registerDoctor,
+  loginDoctor,
+  logoutDoctor,
+  refreshAccessToken,
+  changeCurrentPasswords,
+  getAllDoctors,
+};

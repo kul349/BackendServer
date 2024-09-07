@@ -6,23 +6,40 @@ dotenv.config();
 const doctorSchema = new Schema({
   fullName: {
      type: String, 
-     required: true },
+     required: true,
+     index:true,
+     trim:true,
+ 
+
+     },
   email: {
      type: String, 
      required: true, 
-     unique: true },
+     unique: true,
+     index:true,
+     trim:true,
+ 
+
+    },
   doctorName: { 
     type: String, 
     required: true, 
-    unique: true },
+    unique: true,
+    index:true,
+    trim:true,
+ 
+  },
   password: { type: String, 
     required: true },
   phone: { 
     type: String 
 },
   specialization: { 
-    type: String, 
-    // required: true
+    type: String,  
+    required: true,
+    index:true, 
+    trim:true,
+
    },
   experience: { type: Number },
   licenseNumber: {
@@ -87,14 +104,17 @@ doctorSchema.methods.generateAccessToken = function(){
         _id: this._id,
         email: this.email,
         doctorName: this.doctorName,
-        fullName: this.fullName
+        fullName: this.fullName,
+        specialization:this.specialization
     });
     return jwt.sign(
         {
             _id: this._id,
             email: this.email,
             doctorName: this.doctorName,
-            fullName: this.fullName
+            fullName: this.fullName,
+            specialization:this.specialization
+
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
