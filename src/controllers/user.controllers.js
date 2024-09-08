@@ -39,10 +39,7 @@ const registerUser = asyncHandler(async (req, res) => {
      throw new ApiError(400, "All fields are required");
    }
  
-   // Ensure the role is either "doctor" or "patient"
-   if (!["doctor", "patient"].includes(role)) {
-     throw new ApiError(400, "Invalid role specified");
-   }
+   
   const existedUser = await User.findOne({
     $or: [{ email }, { userName }],
   });
