@@ -1,7 +1,7 @@
 // Appointment model example
-import mongoose from 'mongoose';
+import mongoose,{Schema} from "mongoose";
 
-const appointmentSchema = new mongoose.Schema({
+const appointmentSchema = new Schema({
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -17,11 +17,11 @@ const appointmentSchema = new mongoose.Schema({
     required: true
   },
   startTime: {
-    type: String, // Could also be Date if you prefer handling times as Date objects
+    type: Date, // Could also be Date if you prefer handling times as Date objects
     required: true
   },
   endTime: {
-    type: String, // Could also be Date if you prefer handling times as Date objects
+    type: Date, // Could also be Date if you prefer handling times as Date objects
     required: true
   },
   type: {
