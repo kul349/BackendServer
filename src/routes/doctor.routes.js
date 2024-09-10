@@ -23,7 +23,8 @@ router.route("/register").post(
 router.route("/logout").post(verfyJWT,logoutDoctor);
 router.route("/refresh-token").post(refreshAccessToken);
 router.route('/change-password').post(changeCurrentPasswords); // Change password
-router.route('/doctors').get(getAllDoctors);
+router.route('/getalldoctors').get(getAllDoctors);
+
 
 
 
