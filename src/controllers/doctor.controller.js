@@ -212,11 +212,26 @@ const changeCurrentPasswords = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Password changed successfully"));
 });
 const getAllDoctors = asyncHandler(async (req, res) => {
-  const doctors = await Doctor.find().select("-password"); // Exclude sensitive fields like password
+  // Extract specialization from query parameters
+  const { specialization } = req.query;
+  
+  // Create a filter object
+  const filter = {};
+  
+  // If specialization is provided, add it to the filter
+  if (specialization) {
+    filter.specialization = specialization;
+  }
+  
+  // Find doctors based on the filter and exclude sensitive fields like password
+  const doctors = await Doctor.find(filter).select("-password -refreshToken");
+
+  // Return the filtered doctors
   return res
     .status(200)
     .json(new ApiResponse(200, doctors, "Doctors fetched successfully"));
 });
+
 
 export {
   registerDoctor,
