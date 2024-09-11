@@ -77,8 +77,16 @@ const doctorSchema = new Schema({
     coordinates: { type: [Number], 
         index: '2dsphere' },
   },
-  ratings: {
-     type: Number, min: 0, max: 5, default: 0 },
+  ratingsSummary: {
+    averageRating: {
+      type: Number,
+      default: 0,
+    },
+    totalRatings: {
+      type: Number,
+      default: 0,
+    },
+  },
   reviews: [
     {
       UserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerDoctor, loginDoctor, logoutDoctor, refreshAccessToken,changeCurrentPasswords,getAllDoctors } from '../controllers/doctor.controller.js';
+import { registerDoctor, loginDoctor, logoutDoctor, refreshAccessToken,changeCurrentPasswords,getAllDoctors,addRating } from '../controllers/doctor.controller.js';
 import {upload} from "../middlewares/multer.middlewares.js"
 import { verfyJWT } from "../middlewares/auth.middlewares.js";
 const router= Router();
@@ -24,6 +24,8 @@ router.route("/logout").post(verfyJWT,logoutDoctor);
 router.route("/refresh-token").post(refreshAccessToken);
 router.route('/change-password').post(changeCurrentPasswords); // Change password
 router.route('/getalldoctors').get(getAllDoctors);
+router.route('/addRating').post(addRating);
+
 
 
 

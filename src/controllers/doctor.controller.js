@@ -4,6 +4,7 @@ import { Doctor } from "../models/doctor.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/apiResponse.js";
 import jwt from "jsonwebtoken";
+import {Rating } from "../models/rating.model.js";
 
 const generateAccessAndRefreshTokens = async (doctorId) => {
   try {
@@ -66,6 +67,7 @@ const registerDoctor = asyncHandler(async (req, res) => {
       password,
       doctorName: doctorName.toLowerCase(),
       specialization,
+      
     });
 
     const createdDoctor = await Doctor.findById(doctor._id).select(
@@ -231,6 +233,55 @@ const getAllDoctors = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, doctors, "Doctors fetched successfully"));
 });
+const updateDoctorRatingSummary = async (doctorId) => {
+  try {
+    const ratings = await Rating.find({ doctorId });
+    if (ratings.length === 0) {
+      return;
+    }
+
+    const totalRatings = ratings.length;
+    const sumOfRatings = ratings.reduce((sum, rating) => sum + rating.rating, 0);
+    const averageRating = sumOfRatings / totalRatings;
+
+    await Doctor.findByIdAndUpdate(doctorId, {
+      'ratingsSummary.averageRating': averageRating,
+      'ratingsSummary.totalRatings': totalRatings,
+    });
+  } catch (error) {
+    console.error('Error updating doctor rating summary:', error);
+  }
+};
+
+// Add a new rating
+const addRating = asyncHandler(async (req, res) => {
+  const { doctorId, patientId, rating, comment } = req.body;
+
+  if (!doctorId || !patientId || rating === undefined || rating < 1 || rating > 5) {
+    return res.status(400).json({ message: 'Invalid input data' });
+  }
+
+  try {
+    const newRating = new Rating({
+      doctorId,
+      patientId,
+      rating,
+      comment,
+    });
+    await newRating.save();
+
+    // Update the doctor's rating summary
+    await updateDoctorRatingSummary(doctorId);
+
+    return res.status(201).json({
+      message: 'Rating added successfully',
+      rating: newRating,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error adding rating', error: error.message });
+  }
+});
+
 
 
 export {
@@ -240,4 +291,5 @@ export {
   refreshAccessToken,
   changeCurrentPasswords,
   getAllDoctors,
+  addRating
 };
