@@ -274,7 +274,7 @@ const addRating = asyncHandler(async (req, res) => {
     await updateDoctorRatingSummary(doctorId);
 
     return res.status(201).json({
-      message: 'Rating added successfully',
+      message: 'Rating added c',
       rating: newRating,
     });
   } catch (error) {
