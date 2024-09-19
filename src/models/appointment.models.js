@@ -10,7 +10,7 @@ const appointmentSchema = new Schema({
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor',
-    required: true
+    required: true,
   },
   date: {
     type: Date,
@@ -24,14 +24,7 @@ const appointmentSchema = new Schema({
     type: Date, // Could also be Date if you prefer handling times as Date objects
     required: true
   },
-  type: {
-    type: String,
-    enum: ['in-person', 'virtual'],
-    required: true
-  },
-  reasonForVisit: {
-    type: String
-  }
+  
 }, { timestamps: true });
 
 export const Appointment = mongoose.model('Appointment', appointmentSchema);

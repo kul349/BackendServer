@@ -1,6 +1,14 @@
-const asyncHandler = (requestHandler) => {
-    return (req, res, next) => {
-        Promise.resolve(requestHandler(req, res, next)).catch((err) => next(err))
+import { ApiError } from "./apiError.js";
+
+const asyncHandler = (requestHandler) =>{
+    return async (req, res, next) => {
+        try {
+           await requestHandler(req, res,next);
+        } catch (error) {
+            res
+            .status(error.statusCode)
+            .json(new ApiError(error.statusCode,error.message || 500,[],error.stack));          
+        }
     }
 }
 

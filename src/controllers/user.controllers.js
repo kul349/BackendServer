@@ -95,7 +95,7 @@ const loginUser = asyncHandler(async (req, res) => {
     $or: [{ userName }, { email }],
   });
   if (!user) {
-    throw new ApiError(404, "User doesn't exist");
+    throw new ApiError(404,"User with given credentials doesnot exists");
   }
   console.log(user);
   const isPasswordvalid = await user.isPasswordCorrect(password);

@@ -15,9 +15,12 @@ export const verfyJWT = asyncHandler(async (req, res, next) => {
       throw new ApiError(401, "unauthorized request");
     }
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    console.log("Decoded token:", decodedToken); 
     const user = await User.findById(decodedToken?._id).select(
       "-password -refreshToken"
     );
+    console.log(user, "userrrrrrrrrrrrrrr");
+    
     if (!user) {
       throw new ApiError(401, "Invalid Access Token");
     }
@@ -25,6 +28,8 @@ export const verfyJWT = asyncHandler(async (req, res, next) => {
  
     next();
   } catch (error) {
+    console.log(error);
+    
     throw new ApiError(401, error?.message || "Invalid access Token");
   }
 });
