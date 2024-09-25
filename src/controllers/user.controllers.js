@@ -127,25 +127,41 @@ const loginUser = asyncHandler(async (req, res) => {
     );
 });
 const logoutUser = asyncHandler(async (req, res) => {
-  await User.findByIdAndUpdate(
+  console.log('Logout function called');
+  
+  // Check if req.user is populated
+  if (!req.user) {
+    console.log('No user found in request');
+    return res.status(401).json(new ApiResponse(401, {}, "Unauthorized"));
+  }
+
+  console.log('User ID:', req.user._id);
+  const userUpdate=await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: {
-        refreshToken: undefined,
+      $unset: {
+        refreshToken: null,
       },
     },
     {
       new: true,
     }
   );
-  const options = {
+  if (!userUpdate) {
+    console.log('User not found or update failed');
+    return res.status(404).json(new ApiResponse(404, {}, "User not found"));
+  }
+
+  console.log('User updated:', userUpdate);  const options = {
     httpOnly: true,
     secure: true,
   };
-  return res
+  console.log('Preparing to send response:', new ApiResponse(200, {}, "User logged Out"));
+
+    return res
     .status(200)
-    .clearCookie("accessToken")
-    .clearCookie("refreshToken")
+    .clearCookie("accessToken", { httpOnly: true, secure: true }) // Clear accessToken cookie
+    .clearCookie("refreshToken", { httpOnly: true, secure: true }) // Clear refreshToken cookie
     .json(new ApiResponse(200, {}, "User logged Out"));
 });
 const refreshAccessToken = asyncHandler(async (req, res) => {

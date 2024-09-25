@@ -106,8 +106,11 @@ const generateAllTimeSlots = (date) => {
 
 
 export const createAppointment = async (req, res) => {
+  console.log("Incoming Request Body:", req.body); // Log the entire request body
+
   const { doctorId, date, startTime } = req.body;
   const patientId = req.user._id;
+  console.log(`doctorId data:`,{doctorId,date,startTime});
 
   if (!doctorId || !date || !startTime) {
     return res.status(400).json({ message: "All fields are required" });
@@ -174,3 +177,49 @@ export const getAppointmentsByDoctor = asyncHandler(async (req, res) => {
     res.status(500).json({ message: "Error fetching appointments", error });
   }
 });
+export const getAllAppointments = asyncHandler(async (req, res) => {
+  try {
+    // Fetch all appointments
+    const appointments = await Appointment.find()
+      .populate('patientId', 'patientId fullName') // Populate patient details
+      .populate('doctorId', 'fullName specialization avatar'); // Populate doctor details including specialization and avatar
+      
+    if (!appointments || appointments.length === 0) {
+      return res.status(404).json({ message: 'No appointments found' });
+    }
+
+    // Format the appointments for the response
+    const formattedAppointments = appointments.map(appointment => {
+      const patientId = appointment.patientId ? appointment.patientId.id : 'Unknown Patient ID';
+
+      const patientName = appointment.patientId ? appointment.patientId.fullName : 'Unknown Patient';
+      const doctorName = appointment.doctorId ? appointment.doctorId.fullName : 'Unknown Doctor';
+      const doctorSpecialization = appointment.doctorId ? appointment.doctorId.specialization : 'Unknown Specialization';
+      const doctorImage = appointment.doctorId ? appointment.doctorId.avatar : null; // Default to null if not available
+
+      // Log the appointment details for debugging
+      console.log(`Appointment ID: ${appointment._id}, Patient: ${patientName}, Doctor: ${doctorName}`);
+
+      return {
+        patientId:patientId,
+
+        appointmentId: appointment._id,
+        patientName: patientName,
+        doctorName: doctorName,
+        doctorSpecialization: doctorSpecialization, // Add specialization
+        doctorImage: doctorImage, // Add image
+        date: appointment.date.toISOString().split('T')[0], // Format date
+        startTime: appointment.startTime.toISOString().split('T')[1].slice(0, 5), // Format time (HH:MM)
+        endTime: appointment.endTime.toISOString().split('T')[1].slice(0, 5), // Format time (HH:MM)
+      };
+    });
+
+    res.status(200).json({
+      appointments: formattedAppointments
+    });
+  } catch (error) {
+    console.error("Error in getAllAppointments:", error);
+    res.status(500).json({ message: "Error fetching appointments", error });
+  }
+});
+

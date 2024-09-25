@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getAvailableAndTakenTimeSlots, createAppointment,getAppointmentsByDoctor } from "../controllers/appointment.controllers.js";
+import { getAvailableAndTakenTimeSlots, createAppointment,getAppointmentsByDoctor,getAllAppointments } from "../controllers/appointment.controllers.js";
 import { verfyJWT } from "../middlewares/auth.middlewares.js";
 
 const router = Router();
@@ -10,6 +10,8 @@ const router = Router();
 router.route("/getAppointment").post(verfyJWT, createAppointment);
 router.route("/getAllAppointment/:doctorId").get(getAppointmentsByDoctor);
 router.route("/getAvailableTimeSlots/:doctorId").get(getAvailableAndTakenTimeSlots);
+router.route("/getAllOfAppointment/").get(getAllAppointments);
+
 
 
 

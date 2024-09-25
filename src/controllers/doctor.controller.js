@@ -255,7 +255,7 @@ const updateDoctorRatingSummary = async (doctorId) => {
 
 // Add a new rating
 const addRating = asyncHandler(async (req, res) => {
-  const { doctorId, patientId, rating, comment } = req.body;
+  const { doctorId, patientId, rating, review } = req.body;
 
   if (!doctorId || !patientId || rating === undefined || rating < 1 || rating > 5) {
     return res.status(400).json({ message: 'Invalid input data' });
@@ -266,7 +266,7 @@ const addRating = asyncHandler(async (req, res) => {
       doctorId,
       patientId,
       rating,
-      comment,
+      review,
     });
     await newRating.save();
 
@@ -274,11 +274,24 @@ const addRating = asyncHandler(async (req, res) => {
     await updateDoctorRatingSummary(doctorId);
 
     return res.status(201).json({
-      message: 'Rating added c',
+      message: 'Rating added successfully',
       rating: newRating,
     });
   } catch (error) {
     return res.status(500).json({ message: 'Error adding rating', error: error.message });
+  }
+});
+const getAllDoctorsWithoutFilter = asyncHandler(async (req, res) => {
+  try {
+    // Fetch all doctors and exclude sensitive fields like password and refreshToken
+    const doctors = await Doctor.find().select("-password -refreshToken");
+
+    // Return all doctors
+    return res
+      .status(200)
+      .json(new ApiResponse(200, doctors, "All doctors fetched successfully"));
+  } catch (error) {
+    return res.status(500).json({ message: "Error fetching doctors", error: error.message });
   }
 });
 
@@ -291,5 +304,6 @@ export {
   refreshAccessToken,
   changeCurrentPasswords,
   getAllDoctors,
-  addRating
+  addRating,
+  getAllDoctorsWithoutFilter
 };

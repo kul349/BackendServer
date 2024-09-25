@@ -90,7 +90,7 @@ const doctorSchema = new Schema({
   reviews: [
     {
       UserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      review: { type: String },
+      review: { type: mongoose.Schema.Types.ObjectId, ref: 'Rating' },
       rating: { type: Number, min: 1, max: 5 },
       date: { type: Date, default: Date.now },
     },

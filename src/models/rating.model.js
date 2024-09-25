@@ -17,7 +17,7 @@ const ratingSchema = new mongoose.Schema({
     min: 1,  // Minimum rating value
     max: 5,  // Maximum rating value
   },
-  comment: {
+  review: {
     type: String,
     maxlength: 500,  // Optional comment with max length
   },
