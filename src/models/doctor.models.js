@@ -41,16 +41,27 @@ const doctorSchema = new Schema({
     trim:true,
 
    },
-  experience: { type: Number },
+  experience: { 
+    type: Number,
+    required: true, 
+
+  },
   licenseNumber: {
      type: String,
     //  required: true, 
      unique: true },
   qualifications: [
-    { type: String }
+    {
+       type: String,
+       required:true
+
+       }
 ],
   certifications: [
-    { type: String }],
+    { 
+      type: String,
+
+     }],
   bio: { type: String },
   clinicName: { type: String },
   clinicAddress: { type: String },

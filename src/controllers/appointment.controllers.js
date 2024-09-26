@@ -179,41 +179,36 @@ export const getAppointmentsByDoctor = asyncHandler(async (req, res) => {
 });
 export const getAllAppointments = asyncHandler(async (req, res) => {
   try {
-    // Fetch all appointments
-    const appointments = await Appointment.find()
-      .populate('patientId', 'patientId fullName') // Populate patient details
-      .populate('doctorId', 'fullName specialization avatar'); // Populate doctor details including specialization and avatar
-      
+    // Ensure req.user is populated (from the JWT middleware)
+    const patientId = req.user._id; // Use the logged-in user's ID
+
+    // Log patientId to ensure it's being retrieved correctly
+    console.log("Patient ID:", patientId);
+
+    // Fetch appointments for the logged-in patient
+    const appointments = await Appointment.find({ patientId })
+      .populate('doctorId', 'fullName specialization avatar') // Populate doctor details
+      .populate('patientId', 'fullName'); // Optionally populate patient details if needed
+
+    // Log appointments fetched to debug
+    console.log("Fetched Appointments:", appointments);
+
     if (!appointments || appointments.length === 0) {
-      return res.status(404).json({ message: 'No appointments found' });
+      return res.status(404).json({ message: 'No appointments found for this user' });
     }
 
     // Format the appointments for the response
-    const formattedAppointments = appointments.map(appointment => {
-      const patientId = appointment.patientId ? appointment.patientId.id : 'Unknown Patient ID';
+    const formattedAppointments = appointments.map(appointment => ({
+      appointmentId: appointment._id,
+      doctorName: appointment.doctorId?.fullName || 'Unknown Doctor',
+      doctorSpecialization: appointment.doctorId?.specialization || 'Unknown Specialization',
+      doctorImage: appointment.doctorId?.avatar || null, // Use null if avatar is not available
+      date: appointment.date.toISOString().split('T')[0], // Format date (YYYY-MM-DD)
+      startTime: appointment.startTime.toISOString().split('T')[1].slice(0, 5), // Format start time (HH:MM)
+      endTime: appointment.endTime.toISOString().split('T')[1].slice(0, 5), // Format end time (HH:MM)
+    }));
 
-      const patientName = appointment.patientId ? appointment.patientId.fullName : 'Unknown Patient';
-      const doctorName = appointment.doctorId ? appointment.doctorId.fullName : 'Unknown Doctor';
-      const doctorSpecialization = appointment.doctorId ? appointment.doctorId.specialization : 'Unknown Specialization';
-      const doctorImage = appointment.doctorId ? appointment.doctorId.avatar : null; // Default to null if not available
-
-      // Log the appointment details for debugging
-      console.log(`Appointment ID: ${appointment._id}, Patient: ${patientName}, Doctor: ${doctorName}`);
-
-      return {
-        patientId:patientId,
-
-        appointmentId: appointment._id,
-        patientName: patientName,
-        doctorName: doctorName,
-        doctorSpecialization: doctorSpecialization, // Add specialization
-        doctorImage: doctorImage, // Add image
-        date: appointment.date.toISOString().split('T')[0], // Format date
-        startTime: appointment.startTime.toISOString().split('T')[1].slice(0, 5), // Format time (HH:MM)
-        endTime: appointment.endTime.toISOString().split('T')[1].slice(0, 5), // Format time (HH:MM)
-      };
-    });
-
+    // Send the response with formatted appointments
     res.status(200).json({
       appointments: formattedAppointments
     });
@@ -222,4 +217,3 @@ export const getAllAppointments = asyncHandler(async (req, res) => {
     res.status(500).json({ message: "Error fetching appointments", error });
   }
 });
-

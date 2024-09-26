@@ -10,7 +10,7 @@ const router = Router();
 router.route("/getAppointment").post(verfyJWT, createAppointment);
 router.route("/getAllAppointment/:doctorId").get(getAppointmentsByDoctor);
 router.route("/getAvailableTimeSlots/:doctorId").get(getAvailableAndTakenTimeSlots);
-router.route("/getAllOfAppointment/").get(getAllAppointments);
+router.route("/getAllOfAppointment/").get(verfyJWT,getAllAppointments);
 
 
 

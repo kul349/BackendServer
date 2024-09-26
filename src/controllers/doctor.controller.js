@@ -25,15 +25,17 @@ const generateAccessAndRefreshTokens = async (doctorId) => {
 const registerDoctor = asyncHandler(async (req, res) => {
   
   try {
-    const { fullName, email, doctorName, password, specialization } = req.body;
+    const { fullName, email, doctorName, password, specialization,qualification, experience } = req.body;
     console.log(fullName);
     console.log(doctorName);
     console.log(email);
     console.log(password);
     console.log(specialization);
+    console.log(qualification);
+    console.log(experience)
   
     if (
-      [fullName, email, doctorName, password, specialization].some(
+      [fullName, email, doctorName, password, specialization,qualification, experience].some(
         (field) => field?.trim() === ""
       )
     ) {
@@ -62,11 +64,12 @@ const registerDoctor = asyncHandler(async (req, res) => {
     const doctor = await Doctor.create({
       fullName,
       avatar: avatar.url,
-      coverImage: coverImage?.url || "",
       email,
       password,
       doctorName: doctorName.toLowerCase(),
       specialization,
+      qualification,
+       experience
       
     });
 
@@ -295,6 +298,37 @@ const getAllDoctorsWithoutFilter = asyncHandler(async (req, res) => {
   }
 });
 
+// doctorController.js
+
+// Export the searchDoctor function
+
+const searchDoctor = async (req, res) => {
+  const { specialization } = req.query;
+  const query = {};
+
+  // If specialization is provided, add it to the query
+  if (specialization) {
+      query.specialization = { $regex: specialization, $options: 'i' }; // Case insensitive search
+  }
+
+  try {
+      // Fetch doctors based on the constructed query
+      const doctors = await Doctor.find(query);
+
+      // Check if no doctors were found
+      if (doctors.length === 0) {
+          return res.status(404).json({ message: 'No doctors found matching the criteria.' });
+      }
+
+      // Return the found doctors
+      return res.status(200).json(doctors);
+  } catch (error) {
+      console.error(error);
+      return res.status(500).json({ message: 'An error occurred while searching for doctors.' });
+  }
+};
+
+
 
 
 export {
@@ -305,5 +339,6 @@ export {
   changeCurrentPasswords,
   getAllDoctors,
   addRating,
-  getAllDoctorsWithoutFilter
+  getAllDoctorsWithoutFilter,
+  searchDoctor
 };
