@@ -157,7 +157,7 @@ export const getAppointmentsByDoctor = asyncHandler(async (req, res) => {
 
   try {
     const appointments = await Appointment.find({ doctorId })
-      .populate('patientId', 'fullName')
+      .populate('patientId', 'fullName avatar')
       .populate('doctorId', 'fullName');
 
     if (!appointments || appointments.length === 0) {
@@ -169,7 +169,11 @@ export const getAppointmentsByDoctor = asyncHandler(async (req, res) => {
         patientName: appointment.patientId.fullName,
         doctorName: appointment.doctorId.fullName,
         date: appointment.date,
-        startTime: appointment.startTime
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
+
+        patientImage: appointment.patientId?.avatar || null// Use null if avatar is not available
+
       }))
     });
   } catch (error) {
@@ -188,7 +192,7 @@ export const getAllAppointments = asyncHandler(async (req, res) => {
     // Fetch appointments for the logged-in patient
     const appointments = await Appointment.find({ patientId })
       .populate('doctorId', 'fullName specialization avatar') // Populate doctor details
-      .populate('patientId', 'fullName'); // Optionally populate patient details if needed
+      .populate('patientId', 'fullName avatar'); // Optionally populate patient details if needed
 
     // Log appointments fetched to debug
     console.log("Fetched Appointments:", appointments);
@@ -206,6 +210,8 @@ export const getAllAppointments = asyncHandler(async (req, res) => {
       date: appointment.date.toISOString().split('T')[0], // Format date (YYYY-MM-DD)
       startTime: appointment.startTime.toISOString().split('T')[1].slice(0, 5), // Format start time (HH:MM)
       endTime: appointment.endTime.toISOString().split('T')[1].slice(0, 5), // Format end time (HH:MM)
+      patientImage: appointment.patientId?.avatar || null, // Use null if avatar is not available
+
     }));
 
     // Send the response with formatted appointments

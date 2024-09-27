@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { registerDoctor, loginDoctor, logoutDoctor, refreshAccessToken,changeCurrentPasswords,getAllDoctors,addRating,getAllDoctorsWithoutFilter,searchDoctor } from '../controllers/doctor.controller.js';
+import { registerDoctor, loginDoctor, logoutDoctor, refreshAccessToken,changeCurrentPasswords,getAllDoctors,addRating,getAllDoctorsWithoutFilter,searchDoctor,updateDoctorProfile } from '../controllers/doctor.controller.js';
 import {upload} from "../middlewares/multer.middlewares.js"
 import { verfyJWT } from "../middlewares/auth.middlewares.js";
 const router= Router();
@@ -27,6 +27,8 @@ router.route('/getalldoctors').get(getAllDoctors);
 router.route('/getAllDoctorsWithoutFilter').get(getAllDoctorsWithoutFilter);
 router.route('/addRating').post(addRating);
 router.route('/search-doctor').get(searchDoctor);
+router.route('/updateDoctor:id').put(verfyJWT,updateDoctorProfile);
+
 
 
 

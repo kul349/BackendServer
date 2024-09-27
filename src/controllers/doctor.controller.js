@@ -328,7 +328,26 @@ const searchDoctor = async (req, res) => {
   }
 };
 
+ const updateDoctorProfile = async (req, res) => {
+  try {
+    const doctorId = req.params.id;  // Assuming you are passing doctor ID in URL
+    const updates = req.body;  // The fields to be updated
 
+    // Find the doctor and update the necessary fields
+    const updatedDoctor = await Doctor.findByIdAndUpdate(doctorId, updates, {
+      new: true,  // Returns the updated document
+      runValidators: true,  // Ensures the updates follow schema validation rules
+    });
+
+    if (!updatedDoctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    res.status(200).json(updatedDoctor);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating profile', error });
+  }
+};
 
 
 export {
@@ -340,5 +359,6 @@ export {
   getAllDoctors,
   addRating,
   getAllDoctorsWithoutFilter,
-  searchDoctor
+  searchDoctor,
+  updateDoctorProfile
 };
