@@ -8,7 +8,7 @@ const ratingSchema = new mongoose.Schema({
   },
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Patient',  // Assuming you have a Patient model
+    ref: 'User',  // Assuming you have a Patient model
     required: true,
   },
   rating: {

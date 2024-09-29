@@ -1,8 +1,7 @@
-import { ApiError } from "../utils/apiError.js";
 import { Doctor } from "../models/doctor.models.js";
-import mongoose from "mongoose";
 import { Appointment } from "../models/appointment.models.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { ApiError } from "../utils/ApiError.js";
 
 // Helper function to combine date and time into a Date object
 const createDateTime = (date, time) => {

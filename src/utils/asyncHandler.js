@@ -1,33 +1,21 @@
-import { ApiError } from "./apiError.js";
+import { ApiError } from "./ApiError.js";
 
-const asyncHandler = (requestHandler) =>{
+const asyncHandler = (requestHandler) => {
     return async (req, res, next) => {
         try {
-           await requestHandler(req, res,next);
+            await requestHandler(req, res, next);
         } catch (error) {
-            res
-            .status(error.statusCode)
-            .json(new ApiError(error.statusCode,error.message || 500,[],error.stack));          
+            // Ensure statusCode is set, if not default to 500
+            const statusCode = error.statusCode || 500; 
+            const apiError = new ApiError(statusCode, error.message || "Internal Server Error", [], error.stack);
+            
+            // Log the error for debugging
+            console.error("Error occurred:", apiError);
+
+            // Send the response
+            res.status(statusCode).json(apiError);
         }
     }
 }
 
-
-export { asyncHandler }
-
-
-
-
-
-
-
-
-// const asyncHandler=(fn)=>async(res,req,next)=>{
-// try{
-//   await fn(res,req,next);
-// }catch(error){
-//   res.status(err.code||500).json({message: err.message,
-//     success: false,
-//   })
-// }
-// }
+export { asyncHandler };

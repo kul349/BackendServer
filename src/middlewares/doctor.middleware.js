@@ -1,9 +1,8 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
-import {ApiError} from "../utils/ApiError.js"
-import {Doctor} from '../models/doctor.models.js';  // Adjust this based on your directory structure
-export const verfyJWT = asyncHandler(async (req, res, next) => {
+import { Doctor } from "../models/doctor.models.js";
+import { ApiError } from "../utils/ApiError.js";
+export const docverfyJWT = asyncHandler(async (req, res, next) => {
   try {
     // const token= req.cookies?.accessToken ||req.header("Authorization")?.replace("Bearer","");
     const token =
@@ -17,7 +16,7 @@ export const verfyJWT = asyncHandler(async (req, res, next) => {
     }
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
     console.log("Decoded token112233:", decodedToken); 
-    const user = await User.findById(decodedToken?._id).select(
+    const user = await Doctor.findById(decodedToken?._id).select(
       "-password -refreshToken"
     );
     console.log(user, "userrrrrrrrrrrrrrr");

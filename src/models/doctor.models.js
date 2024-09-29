@@ -100,11 +100,14 @@ const doctorSchema = new Schema({
   },
   reviews: [
     {
-      UserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-      review: { type: mongoose.Schema.Types.ObjectId, ref: 'Rating' },
-      rating: { type: Number, min: 1, max: 5 },
-      date: { type: Date, default: Date.now },
-    },
+      patient: {
+        type: mongoose.Schema.Types.ObjectId,  // Reference to the Patient model
+        ref: 'Patient',
+        required: true
+      },
+      rating: Number, // If you want to store ratings here as well
+      review: String  // If you want to store the review here as well
+    }
   ],
   isVerified: { type: Boolean, default: false },
   

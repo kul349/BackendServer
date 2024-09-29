@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { registerDoctor, loginDoctor, logoutDoctor, refreshAccessToken,changeCurrentPasswords,getAllDoctors,addRating,getAllDoctorsWithoutFilter,searchDoctor,updateDoctorProfile } from '../controllers/doctor.controller.js';
+import { registerDoctor, loginDoctor, logoutDoctor, refreshAccessToken,changeCurrentPasswords,getAllDoctors,addRating,getAllDoctorsWithoutFilter,searchDoctor,updateDoctorProfile ,getDoctorRatings} from '../controllers/doctor.controller.js';
 import {upload} from "../middlewares/multer.middlewares.js"
-import { verfyJWT } from "../middlewares/auth.middlewares.js";
+import { docverfyJWT } from "../middlewares/doctor.middleware.js";
 const router= Router();
 
   
@@ -20,14 +20,15 @@ router.route("/register").post(
     registerDoctor);
     router.route("/login").post(loginDoctor);
 // secured route
-router.route("/logout").post(verfyJWT,logoutDoctor);
+router.route("/logout").post(docverfyJWT,logoutDoctor);
 router.route("/refresh-token").post(refreshAccessToken);
 router.route('/change-password').post(changeCurrentPasswords); // Change password
 router.route('/getalldoctors').get(getAllDoctors);
 router.route('/getAllDoctorsWithoutFilter').get(getAllDoctorsWithoutFilter);
 router.route('/addRating').post(addRating);
 router.route('/search-doctor').get(searchDoctor);
-router.route('/updateDoctor:id').put(verfyJWT,updateDoctorProfile);
+router.route('/updateDoctor/:id').put(docverfyJWT,updateDoctorProfile);
+router.route('/getRating/:doctorId').get(docverfyJWT,getDoctorRatings);
 
 
 

@@ -1,5 +1,5 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
-import { ApiError } from "../utils/apiError.js";
+import { ApiError } from "../utils/ApiError.js";
 import { Doctor } from "../models/doctor.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/apiResponse.js";
@@ -236,6 +236,8 @@ const getAllDoctors = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, doctors, "Doctors fetched successfully"));
 });
+
+
 const updateDoctorRatingSummary = async (doctorId) => {
   try {
     const ratings = await Rating.find({ doctorId });
@@ -272,10 +274,18 @@ const addRating = asyncHandler(async (req, res) => {
       review,
     });
     await newRating.save();
+    await Doctor.findByIdAndUpdate(doctorId, {
+      $push: {
+        reviews: {
+          patient: patientId,    // Reference to the User model
+        }
+      }
+    });
 
     // Update the doctor's rating summary
     await updateDoctorRatingSummary(doctorId);
-
+ 
+    
     return res.status(201).json({
       message: 'Rating added successfully',
       rating: newRating,
@@ -284,6 +294,51 @@ const addRating = asyncHandler(async (req, res) => {
     return res.status(500).json({ message: 'Error adding rating', error: error.message });
   }
 });
+  // Fetch ratings and reviews for a doctor
+  const getDoctorRatings = asyncHandler(async (req, res) => {
+    const { doctorId } = req.params;
+
+    if (!doctorId) {
+      return res.status(400).json({ message: 'Doctor ID is required' });
+    }
+
+    try {
+      // Fetch ratings and populate patient details
+      const ratings = await Rating.find({ doctorId })
+        .populate('patientId', 'fullName avatar') // Populate patient details
+        .select('review rating createdAt'); // Select only review, rating, and timestamp
+
+      // Fetch the doctor's rating summary (if stored in Doctor model)
+      const doctor = await Doctor.findById(doctorId, 'ratingsSummary review');
+
+      if (!doctor) {
+        return res.status(404).json({ message: 'Doctor not found' });
+      }
+
+      // Send the data back in the response
+      return res.status(200).json({
+        ratings: ratings.map(rating => ({
+          review: rating.review,
+          rating: rating.rating, // Individual rating score
+          patient: {
+            fullName: rating.patientId.fullName, // Patient's full name
+            image: rating.patientId.avatar // Patient's profile image
+          },
+          date: rating.createdAt // Date and time of the rating
+        })),
+        ratingsSummary: doctor.ratingsSummary, // Doctor's overall ratings summary
+      });
+
+    } catch (error) {
+      console.error('Error fetching doctor ratings:', error.message);
+
+      return res.status(500).json({ message: 'Error fetching doctor ratings', error: error.message });
+    }
+});
+
+  
+
+
 const getAllDoctorsWithoutFilter = asyncHandler(async (req, res) => {
   try {
     // Fetch all doctors and exclude sensitive fields like password and refreshToken
@@ -360,5 +415,6 @@ export {
   addRating,
   getAllDoctorsWithoutFilter,
   searchDoctor,
-  updateDoctorProfile
+  updateDoctorProfile,
+  getDoctorRatings
 };
