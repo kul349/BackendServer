@@ -113,6 +113,7 @@ const loginUser = asyncHandler(async (req, res) => {
   );
   if (fcmToken && user.fcmToken !== fcmToken) {
     user.fcmToken = fcmToken;  // Update FCM token in the database
+    console.log(fcmToken);
     await user.save();  // Save the user with the updated FCM token
   }
   const loggedInUser = await User.findById(user._id).select(

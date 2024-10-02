@@ -3,6 +3,7 @@ import { Appointment } from "../models/appointment.models.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import {sendNotification}from '../../notification.js'
+import { User } from "../models/user.model.js";
 // Helper function to combine date and time into a Date object
 const createDateTime = (date, time) => {
   const [hours, minutes] = time.split(':').map(Number);
@@ -143,11 +144,24 @@ export const createAppointment = async (req, res) => {
     });
     const doctor = await Doctor.findById(doctorId);
     const patient = await User.findById(patientId); // Assuming you have a User model for patients
-    const tokens = [doctor.fcmToken, patient.fcmToken].filter(Boolean); // Filter out any undefined tokens
-
-    // Send notification
-    if (tokens.length) {
-      await sendNotification(tokens, 'Appointment Booked', `You have an appointment on ${date} at ${startTime}.`);
+    
+    if (!doctor || !patient) {
+      console.error('Doctor or Patient not found.');
+      return;
+    }
+    
+    // Prepare the tokens
+    const doctorToken = doctor.fcmToken;
+    const patientToken = patient.fcmToken;
+    
+    // Send notification to doctor
+    if (doctorToken) {
+      await sendNotification([doctorToken], 'New Appointment', `You have an appointment with ${patient.fullName} on ${date} at ${startTime}.`);
+    }
+    
+    // Send notification to patient
+    if (patientToken) {
+      await sendNotification([patientToken], 'Appointment Confirmed', `Your appointment with Dr. ${doctor.doctorName} is confirmed on ${date} at ${startTime}.`);
     }
   } catch (error) {
     console.error("Error in createAppointment:", error);

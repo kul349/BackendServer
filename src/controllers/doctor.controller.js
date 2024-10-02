@@ -94,7 +94,7 @@ const registerDoctor = asyncHandler(async (req, res) => {
 });
 
 const loginDoctor = asyncHandler(async (req, res) => {
-  const { email, doctorName, password } = req.body;
+  const { email, doctorName, password,fcmToken} = req.body;
 
   if (!(doctorName || email)) {
     throw new ApiError(400, "Doctor name or email required");
@@ -112,7 +112,11 @@ const loginDoctor = asyncHandler(async (req, res) => {
   if (!isPasswordValid) {
     throw new ApiError(401, "Invalid credentials");
   }
-
+  if (fcmToken && doctor.fcmToken !== fcmToken) {
+    doctor.fcmToken = fcmToken;  // Update FCM token in the database
+    console.log(fcmToken);
+    await doctor.save();  // Save the user with the updated FCM token
+  }
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
     doctor._id
   );
