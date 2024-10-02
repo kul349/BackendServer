@@ -2,7 +2,6 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js";
 import jwt from "jsonwebtoken";
 import {ApiError} from "../utils/ApiError.js"
-import {Doctor} from '../models/doctor.models.js';  // Adjust this based on your directory structure
 export const verfyJWT = asyncHandler(async (req, res, next) => {
   try {
     // const token= req.cookies?.accessToken ||req.header("Authorization")?.replace("Bearer","");

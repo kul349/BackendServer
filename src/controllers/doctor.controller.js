@@ -25,7 +25,7 @@ const generateAccessAndRefreshTokens = async (doctorId) => {
 const registerDoctor = asyncHandler(async (req, res) => {
   
   try {
-    const { fullName, email, doctorName, password, specialization,qualification, experience } = req.body;
+    const { fullName, email, doctorName, password, specialization,qualification, experience,fcmToken } = req.body;
     console.log(fullName);
     console.log(doctorName);
     console.log(email);
@@ -33,6 +33,7 @@ const registerDoctor = asyncHandler(async (req, res) => {
     console.log(specialization);
     console.log(qualification);
     console.log(experience)
+    console.log(fcmToken);
   
     if (
       [fullName, email, doctorName, password, specialization,qualification, experience].some(
@@ -69,7 +70,8 @@ const registerDoctor = asyncHandler(async (req, res) => {
       doctorName: doctorName.toLowerCase(),
       specialization,
       qualification,
-       experience
+      experience,
+      fcmToken
       
     });
 

@@ -32,8 +32,12 @@ const registerUser = asyncHandler(async (req, res) => {
   //check for user creation
   //return res
    // Extract user details from frontend
-   const { fullName, email, userName, password} = req.body;
+   const { fullName, email, userName, password,fcmToken} = req.body;
+   console.log(`FCM Token: ${fcmToken}`);
 
+   if (!fcmToken) {
+    return res.status(400).json({ message: "FCM token not provided" });
+}
    // Validate that all fields are not empty
    if ([fullName, email, userName, password].some((field) => field?.trim() === "")) {
      throw new ApiError(400, "All fields are required");
@@ -71,6 +75,8 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     password,
     userName: userName.toLowerCase(),
+    fcmToken
+    
   });
   const createdUser = await User.findById(user._id).select(
     "-password -refreshToken"
@@ -85,7 +91,7 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 const loginUser = asyncHandler(async (req, res) => {
   // it extract the data from the request
-  const { email, userName, password } = req.body;
+  const { email, userName, password,fcmToken} = req.body;
   // it will check weather userName or email existed user
   if (!(userName || email)) {
     throw new ApiError(400, "userName or password required");
@@ -105,6 +111,10 @@ const loginUser = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
     user._id
   );
+  if (fcmToken && user.fcmToken !== fcmToken) {
+    user.fcmToken = fcmToken;  // Update FCM token in the database
+    await user.save();  // Save the user with the updated FCM token
+  }
   const loggedInUser = await User.findById(user._id).select(
     "-password -refreshToken"
   );

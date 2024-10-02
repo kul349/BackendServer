@@ -41,7 +41,9 @@ const userSchema = new Schema({
     },
     refreshToken:{
         type:String,
-    }
+    },
+    fcmToken: { type: String }, // New field for FCM token
+
 },{timestamps:true});
 userSchema.pre("save",async function(next){
     if(!this.isModified("password")) return next();

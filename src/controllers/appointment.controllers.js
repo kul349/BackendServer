@@ -2,7 +2,7 @@ import { Doctor } from "../models/doctor.models.js";
 import { Appointment } from "../models/appointment.models.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
-
+import {sendNotification}from '../../notification.js'
 // Helper function to combine date and time into a Date object
 const createDateTime = (date, time) => {
   const [hours, minutes] = time.split(':').map(Number);
@@ -141,6 +141,14 @@ export const createAppointment = async (req, res) => {
       message: "Appointment booked successfully",
       appointment: newAppointment,
     });
+    const doctor = await Doctor.findById(doctorId);
+    const patient = await User.findById(patientId); // Assuming you have a User model for patients
+    const tokens = [doctor.fcmToken, patient.fcmToken].filter(Boolean); // Filter out any undefined tokens
+
+    // Send notification
+    if (tokens.length) {
+      await sendNotification(tokens, 'Appointment Booked', `You have an appointment on ${date} at ${startTime}.`);
+    }
   } catch (error) {
     console.error("Error in createAppointment:", error);
     res.status(500).json({ message: "Error creating appointment", error });

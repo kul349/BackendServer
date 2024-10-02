@@ -110,6 +110,8 @@ const doctorSchema = new Schema({
     }
   ],
   isVerified: { type: Boolean, default: false },
+  fcmToken: { type: String }, // New field for FCM token
+
   
 },{timestamps:true});
 
