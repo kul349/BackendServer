@@ -156,12 +156,24 @@ export const createAppointment = async (req, res) => {
     
     // Send notification to doctor
     if (doctorToken) {
-      await sendNotification([doctorToken], 'New Appointment', `You have an appointment with ${patient.fullName} on ${date} at ${startTime}.`);
+      await sendNotification(
+        [doctorToken],
+        'New Appointment',
+        `You have an appointment with ${patient.fullName} on ${date} at ${startTime}.`,
+        'Doctor', // User type for the doctor
+        doctor._id // Doctor's ID
+      );
     }
     
     // Send notification to patient
     if (patientToken) {
-      await sendNotification([patientToken], 'Appointment Confirmed', `Your appointment with Dr. ${doctor.doctorName} is confirmed on ${date} at ${startTime}.`);
+      await sendNotification(
+        [patientToken],
+        'Appointment Confirmed',
+        `Your appointment with Dr. ${doctor.doctorName} is confirmed on ${date} at ${startTime}.`,
+        'Patient', // User type for the patient
+        patient._id // Patient's ID
+      );
     }
   } catch (error) {
     console.error("Error in createAppointment:", error);

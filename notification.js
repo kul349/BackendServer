@@ -1,7 +1,6 @@
 import admin from 'firebase-admin';
 import { config } from 'dotenv';
-
-// Load environment variables from .env file if present
+import { Notification } from './src/models/notification.model.js'; // Importing the Notification model// Load environment variables from .env file if present
 config();
 
 // Verify that GOOGLE_APPLICATION_CREDENTIALS is set
@@ -19,7 +18,7 @@ admin.initializeApp({
 });
 
 // Function to send notifications
-const sendNotification = async (tokens, title, body) => {
+const sendNotification = async (tokens, title, body, userType, userId) => {
   if (!Array.isArray(tokens) || tokens.length === 0) {
     console.error('Invalid tokens array:', tokens);
     return;
@@ -40,8 +39,19 @@ const sendNotification = async (tokens, title, body) => {
       responses.push(response);
     }
     console.log('Notifications sent successfully:', responses);
+
+    // Save the notification to MongoDB
+    const notification = new Notification({
+      userType: userType,
+      userId: userId,
+      title: title,
+      message: body,
+    });
+
+    await notification.save();
+    console.log('Notification saved to MongoDB:', notification);
   } catch (error) {
-    console.error('Error sending notification:', error);
+    console.error('Error sending notification or saving to MongoDB:', error);
   }
 };
 
