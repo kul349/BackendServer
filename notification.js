@@ -17,7 +17,6 @@ admin.initializeApp({
   credential: admin.credential.applicationDefault(), // Use the application default credentials
 });
 
-// Function to send notifications
 const sendNotification = async (tokens, title, body, userType, userId) => {
   if (!Array.isArray(tokens) || tokens.length === 0) {
     console.error('Invalid tokens array:', tokens);
@@ -29,6 +28,11 @@ const sendNotification = async (tokens, title, body, userType, userId) => {
       title: title,
       body: body,
     },
+    // Make sure userId and userType are strings in the data payload
+    data: {
+      userType: String(userType),
+      userId: String(userId),  // Convert userId to a string
+    }
   };
 
   const responses = [];
@@ -54,5 +58,8 @@ const sendNotification = async (tokens, title, body, userType, userId) => {
     console.error('Error sending notification or saving to MongoDB:', error);
   }
 };
+;
+
+
 
 export { sendNotification };
