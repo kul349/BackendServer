@@ -1,6 +1,6 @@
 import admin from 'firebase-admin';
 import { config } from 'dotenv';
-import { Notification } from './src/models/notification.model.js'; // Importing the Notification model// Load environment variables from .env file if present
+import { Notification } from './models/notification.model.js'; // Importing the Notification model// Load environment variables from .env file if present
 config();
 
 // Verify that GOOGLE_APPLICATION_CREDENTIALS is set

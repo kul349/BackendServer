@@ -2,11 +2,11 @@ import { Doctor } from "../models/doctor.models.js";
 import { Appointment } from "../models/appointment.models.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
-import {sendNotification}from '../../notification.js'
+import { sendNotification } from "../notification.js";
 import { User } from "../models/user.model.js";
 // Helper function to combine date and time into a Date object
 const createDateTime = (date, time) => {
-  const [hours, minutes] = time.split(':').map(Number);
+  const [hours, minutes] = time.split(":").map(Number);
   const dateTime = new Date(date);
   dateTime.setHours(hours, minutes, 0, 0);
   return dateTime;
@@ -22,7 +22,7 @@ const isTimeSlotAvailable = async (doctorId, startDateTime, endDateTime) => {
     const appointments = await Appointment.find({
       doctorId,
       startTime: { $lt: endDateTime },
-      endTime: { $gt: startDateTime }
+      endTime: { $gt: startDateTime },
     });
 
     return appointments.length === 0;
@@ -43,26 +43,26 @@ export const getAvailableAndTakenTimeSlots = async (req, res) => {
   try {
     // Convert date to Date object
     const queryDate = new Date(date);
-    
+
     // Find all appointments for the doctor on the specified date
     const appointments = await Appointment.find({
       doctorId,
       startTime: { $gte: queryDate },
-      endTime: { $lt: addMinutes(queryDate, 24 * 60 * 60 * 1000) } // End of the day
+      endTime: { $lt: addMinutes(queryDate, 24 * 60 * 60 * 1000) }, // End of the day
     });
 
     // Map the taken slots (already booked slots)
-    const takenSlots = appointments.map(appointment => ({
+    const takenSlots = appointments.map((appointment) => ({
       startTime: appointment.startTime.toISOString(),
-      endTime: appointment.endTime.toISOString()
+      endTime: appointment.endTime.toISOString(),
     }));
     console.log("Taken Time Slots:", takenSlots);
     // Generate all possible time slots for the day
     const allTimeSlots = generateAllTimeSlots(date);
 
     // Filter out taken slots to get available slots
-    const availableSlots = allTimeSlots.filter(slot => {
-      return !takenSlots.some(taken => {
+    const availableSlots = allTimeSlots.filter((slot) => {
+      return !takenSlots.some((taken) => {
         const takenStart = new Date(taken.startTime);
         const takenEnd = new Date(taken.endTime);
         return slot.startTime < takenEnd && slot.endTime > takenStart;
@@ -70,11 +70,11 @@ export const getAvailableAndTakenTimeSlots = async (req, res) => {
     });
 
     res.status(200).json({
-      availableSlots: availableSlots.map(slot => ({
+      availableSlots: availableSlots.map((slot) => ({
         startTime: slot.startTime.toISOString(),
-        endTime: slot.endTime.toISOString()
+        endTime: slot.endTime.toISOString(),
       })),
-      takenSlots
+      takenSlots,
     });
   } catch (error) {
     console.error("Error in getAvailableAndTakenTimeSlots:", error);
@@ -95,7 +95,7 @@ const generateAllTimeSlots = (date) => {
 
     timeSlots.push({
       startTime: new Date(startTime),
-      endTime: new Date(slotEndTime)
+      endTime: new Date(slotEndTime),
     });
 
     startTime.setMinutes(startTime.getMinutes() + 30);
@@ -104,13 +104,12 @@ const generateAllTimeSlots = (date) => {
   return timeSlots;
 };
 
-
 export const createAppointment = async (req, res) => {
   console.log("Incoming Request Body:", req.body); // Log the entire request body
 
   const { doctorId, date, startTime } = req.body;
   const patientId = req.user._id;
-  console.log(`doctorId data:`,{doctorId,date,startTime});
+  console.log(`doctorId data:`, { doctorId, date, startTime });
 
   if (!doctorId || !date || !startTime) {
     return res.status(400).json({ message: "All fields are required" });
@@ -120,9 +119,15 @@ export const createAppointment = async (req, res) => {
     const startDateTime = createDateTime(date, startTime);
     const endDateTime = addMinutes(startDateTime, 30);
 
-    const available = await isTimeSlotAvailable(doctorId, startDateTime, endDateTime);
+    const available = await isTimeSlotAvailable(
+      doctorId,
+      startDateTime,
+      endDateTime
+    );
     if (!available) {
-      return res.status(400).json({ message: "Selected time slot is not available" });
+      return res
+        .status(400)
+        .json({ message: "Selected time slot is not available" });
     }
 
     const newAppointment = new Appointment({
@@ -130,11 +135,13 @@ export const createAppointment = async (req, res) => {
       doctorId,
       startTime: startDateTime,
       endTime: endDateTime,
-      date: new Date(date)
+      date: new Date(date),
     });
 
     await newAppointment.save();
-    await Doctor.findByIdAndUpdate(doctorId, { $push: { appointments: newAppointment._id } });
+    await Doctor.findByIdAndUpdate(doctorId, {
+      $push: { appointments: newAppointment._id },
+    });
     console.log("Appointment Created Successfully:");
     console.log("Appointment ID:", newAppointment._id);
     console.log("Appointment Details:", newAppointment);
@@ -144,34 +151,34 @@ export const createAppointment = async (req, res) => {
     });
     const doctor = await Doctor.findById(doctorId);
     const patient = await User.findById(patientId); // Assuming you have a User model for patients
-    
+
     if (!doctor || !patient) {
-      console.error('Doctor or Patient not found.');
+      console.error("Doctor or Patient not found.");
       return;
     }
-    
+
     // Prepare the tokens
     const doctorToken = doctor.fcmToken;
     const patientToken = patient.fcmToken;
-    
+
     // Send notification to doctor
     if (doctorToken) {
       await sendNotification(
         [doctorToken],
-        'New Appointment',
+        "New Appointment",
         `You have an appointment with ${patient.fullName} on ${date} at ${startTime}.`,
-        'Doctor', // User type for the doctor
+        "Doctor", // User type for the doctor
         doctor._id // Doctor's ID
       );
     }
-    
+
     // Send notification to patient
     if (patientToken) {
       await sendNotification(
         [patientToken],
-        'Appointment Confirmed',
+        "Appointment Confirmed",
         `Your appointment with Dr. ${doctor.doctorName} is confirmed on ${date} at ${startTime}.`,
-        'Patient', // User type for the patient
+        "Patient", // User type for the patient
         patient._id // Patient's ID
       );
     }
@@ -185,29 +192,30 @@ export const getAppointmentsByDoctor = asyncHandler(async (req, res) => {
   const doctorId = req.params.doctorId;
 
   if (!doctorId) {
-    return res.status(400).json({ message: 'Doctor ID is required' });
+    return res.status(400).json({ message: "Doctor ID is required" });
   }
 
   try {
     const appointments = await Appointment.find({ doctorId })
-      .populate('patientId', 'fullName avatar')
-      .populate('doctorId', 'fullName');
+      .populate("patientId", "fullName avatar")
+      .populate("doctorId", "fullName");
 
     if (!appointments || appointments.length === 0) {
-      return res.status(404).json({ message: 'No appointments found for this doctor' });
+      return res
+        .status(404)
+        .json({ message: "No appointments found for this doctor" });
     }
 
     res.status(200).json({
-      appointments: appointments.map(appointment => ({
+      appointments: appointments.map((appointment) => ({
         patientName: appointment.patientId.fullName,
         doctorName: appointment.doctorId.fullName,
         date: appointment.date,
         startTime: appointment.startTime,
         endTime: appointment.endTime,
 
-        patientImage: appointment.patientId?.avatar || null// Use null if avatar is not available
-
-      }))
+        patientImage: appointment.patientId?.avatar || null, // Use null if avatar is not available
+      })),
     });
   } catch (error) {
     console.error("Error in getAppointmentsByDoctor:", error);
@@ -224,32 +232,34 @@ export const getAllAppointments = asyncHandler(async (req, res) => {
 
     // Fetch appointments for the logged-in patient
     const appointments = await Appointment.find({ patientId })
-      .populate('doctorId', 'fullName specialization avatar') // Populate doctor details
-      .populate('patientId', 'fullName avatar'); // Optionally populate patient details if needed
+      .populate("doctorId", "fullName specialization avatar") // Populate doctor details
+      .populate("patientId", "fullName avatar"); // Optionally populate patient details if needed
 
     // Log appointments fetched to debug
     console.log("Fetched Appointments:", appointments);
 
     if (!appointments || appointments.length === 0) {
-      return res.status(404).json({ message: 'No appointments found for this user' });
+      return res
+        .status(404)
+        .json({ message: "No appointments found for this user" });
     }
 
     // Format the appointments for the response
-    const formattedAppointments = appointments.map(appointment => ({
+    const formattedAppointments = appointments.map((appointment) => ({
       appointmentId: appointment._id,
-      doctorName: appointment.doctorId?.fullName || 'Unknown Doctor',
-      doctorSpecialization: appointment.doctorId?.specialization || 'Unknown Specialization',
+      doctorName: appointment.doctorId?.fullName || "Unknown Doctor",
+      doctorSpecialization:
+        appointment.doctorId?.specialization || "Unknown Specialization",
       doctorImage: appointment.doctorId?.avatar || null, // Use null if avatar is not available
-      date: appointment.date.toISOString().split('T')[0], // Format date (YYYY-MM-DD)
-      startTime: appointment.startTime.toISOString().split('T')[1].slice(0, 5), // Format start time (HH:MM)
-      endTime: appointment.endTime.toISOString().split('T')[1].slice(0, 5), // Format end time (HH:MM)
+      date: appointment.date.toISOString().split("T")[0], // Format date (YYYY-MM-DD)
+      startTime: appointment.startTime.toISOString().split("T")[1].slice(0, 5), // Format start time (HH:MM)
+      endTime: appointment.endTime.toISOString().split("T")[1].slice(0, 5), // Format end time (HH:MM)
       patientImage: appointment.patientId?.avatar || null, // Use null if avatar is not available
-
     }));
 
     // Send the response with formatted appointments
     res.status(200).json({
-      appointments: formattedAppointments
+      appointments: formattedAppointments,
     });
   } catch (error) {
     console.error("Error in getAllAppointments:", error);
