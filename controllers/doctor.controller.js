@@ -393,31 +393,42 @@ const searchDoctor = async (req, res) => {
 
  const updateDoctorProfile = async (req, res) => {
   try {
-    const doctorId = req.params.id;  // Assuming you are passing doctor ID in the URL
+    const doctorId = req.params.id;  // Assuming you are passing doctor ID in URL
     const updates = req.body;  // The fields to be updated
 
-    // Fetch the existing doctor data
-    let doctor = await Doctor.findById(doctorId);
+    // Find the doctor and update the necessary fields
+    const updatedDoctor = await Doctor.findByIdAndUpdate(doctorId, updates, {
+      new: true,  // Returns the updated document
+      runValidators: true,  // Ensures the updates follow schema validation rules
+    });
+
+    if (!updatedDoctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    res.status(200).json(updatedDoctor);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating profile', error });
+  }
+};
+const getDoctorProfile = async (req, res) => {
+  try {
+    const doctorId = req.params.id; // Get the ID from the request parameters
+
+    // Find the doctor by ID
+    const doctor = await Doctor.findById(doctorId).select('-__v'); // Exclude the version key from the response
 
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
-    // Update only the fields provided in the request
-    Object.keys(updates).forEach((key) => {
-      doctor[key] = updates[key];
-    });
-
-    // Save the updated doctor profile
-    const updatedDoctor = await doctor.save();
-
-    res.status(200).json(updatedDoctor);  // Return the updated doctor profile
+    // Return the doctor's data
+    res.status(200).json(doctor);
   } catch (error) {
-    res.status(500).json({ message: 'Error updating profile', error });
+    console.error('Error fetching doctor profile:', error);
+    res.status(500).json({ message: 'Error fetching doctor profile', error });
   }
 };
-
-
 
 export {
   registerDoctor,
@@ -430,5 +441,6 @@ export {
   getAllDoctorsWithoutFilter,
   searchDoctor,
   updateDoctorProfile,
-  getDoctorRatings
+  getDoctorRatings,
+  getDoctorProfile 
 };
