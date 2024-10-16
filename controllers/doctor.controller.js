@@ -393,24 +393,30 @@ const searchDoctor = async (req, res) => {
 
  const updateDoctorProfile = async (req, res) => {
   try {
-    const doctorId = req.params.id;  // Assuming you are passing doctor ID in URL
+    const doctorId = req.params.id;  // Assuming you are passing doctor ID in the URL
     const updates = req.body;  // The fields to be updated
 
-    // Find the doctor and update the necessary fields
-    const updatedDoctor = await Doctor.findByIdAndUpdate(doctorId, updates, {
-      new: true,  // Returns the updated document
-      runValidators: true,  // Ensures the updates follow schema validation rules
-    });
+    // Fetch the existing doctor data
+    let doctor = await Doctor.findById(doctorId);
 
-    if (!updatedDoctor) {
+    if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
-    res.status(200).json(updatedDoctor);
+    // Update only the fields provided in the request
+    Object.keys(updates).forEach((key) => {
+      doctor[key] = updates[key];
+    });
+
+    // Save the updated doctor profile
+    const updatedDoctor = await doctor.save();
+
+    res.status(200).json(updatedDoctor);  // Return the updated doctor profile
   } catch (error) {
     res.status(500).json({ message: 'Error updating profile', error });
   }
 };
+
 
 
 export {
