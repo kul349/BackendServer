@@ -65,6 +65,7 @@ const doctorSchema = new Schema({
   bio: { type: String },
   clinicName: { type: String },
   clinicAddress: { type: String },
+  
   workingHours: [
     {
       day: { type: String },
