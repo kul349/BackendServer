@@ -391,35 +391,46 @@ const searchDoctor = async (req, res) => {
   }
 };
 
-const updateDoctorProfile = asyncHandler(async (req, res) => {
+const updateDoctorProfile = async (req, res) => {
   try {
-    const doctorId = req.params.id;
-    const updates = req.body;
+    const doctorId = req.params.id; // Assuming you are passing doctor ID in URL
 
-    // Check if a new avatar file is uploaded
+    // Directly assign req.body to updates
+    const updates = req.body;
+    console.log(`recived data are:${req.body}`);
+    console.log(req.body.fullName);
+    console.log(req.body.doctorName);
+      
+      console.log(req.body.clinicName);
+    
+
+    // Handle file uploads if they exist
     const avatarLocalPath = req.files?.avatar?.[0]?.path;
+
+    // If an avatar is uploaded, upload it to Cloudinary and add URL to updates
     if (avatarLocalPath) {
-      // Upload the new avatar to Cloudinary (or other storage)
       const avatar = await uploadOnCloudinary(avatarLocalPath);
-      updates.avatar = avatar.url; // Update the avatar URL in the database
+      updates.avatar = avatar.url; // Add avatar URL to updates
     }
 
+  
+
+    // Find the doctor and update the necessary fields
     const updatedDoctor = await Doctor.findByIdAndUpdate(doctorId, updates, {
-      new: true,
-      runValidators: true,
+      new: true, // Returns the updated document
+      runValidators: true, // Ensures the updates follow schema validation rules
     });
 
     if (!updatedDoctor) {
-      throw new ApiError(404, "Doctor not found");
+      return res.status(404).json({ message: 'Doctor not found' });
     }
-
-    return res
-      .status(200)
-      .json(new ApiResponse(200, updatedDoctor, "Profile updated successfully"));
+    // Respond with the updated doctor data
+    res.status(200).json({ message: 'Profile updated successfully', doctor: updatedDoctor });
   } catch (error) {
-    return res.status(500).json({ message: "Error updating profile", error });
+    console.error(error); // Log error for debugging
+    res.status(500).json({ message: 'Error updating profile', error });
   }
-});
+};
 
 const getDoctorProfile = async (req, res) => {
   try {
