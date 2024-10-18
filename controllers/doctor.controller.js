@@ -391,26 +391,36 @@ const searchDoctor = async (req, res) => {
   }
 };
 
- const updateDoctorProfile = async (req, res) => {
+const updateDoctorProfile = asyncHandler(async (req, res) => {
   try {
-    const doctorId = req.params.id;  // Assuming you are passing doctor ID in URL
-    const updates = req.body;  // The fields to be updated
+    const doctorId = req.params.id;
+    const updates = req.body;
 
-    // Find the doctor and update the necessary fields
+    // Check if a new avatar file is uploaded
+    const avatarLocalPath = req.files?.avatar?.[0]?.path;
+    if (avatarLocalPath) {
+      // Upload the new avatar to Cloudinary (or other storage)
+      const avatar = await uploadOnCloudinary(avatarLocalPath);
+      updates.avatar = avatar.url; // Update the avatar URL in the database
+    }
+
     const updatedDoctor = await Doctor.findByIdAndUpdate(doctorId, updates, {
-      new: true,  // Returns the updated document
-      runValidators: true,  // Ensures the updates follow schema validation rules
+      new: true,
+      runValidators: true,
     });
 
     if (!updatedDoctor) {
-      return res.status(404).json({ message: 'Doctor not found' });
+      throw new ApiError(404, "Doctor not found");
     }
 
-    res.status(200).json(updatedDoctor);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, updatedDoctor, "Profile updated successfully"));
   } catch (error) {
-    res.status(500).json({ message: 'Error updating profile', error });
+    return res.status(500).json({ message: "Error updating profile", error });
   }
-};
+});
+
 const getDoctorProfile = async (req, res) => {
   try {
     const doctorId = req.params.id; // Get the ID from the request parameters
