@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { Doctor } from "../models/doctor.models.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
-
+import mongoose from "mongoose";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import {Rating } from "../models/rating.model.js";
@@ -394,43 +394,49 @@ const searchDoctor = async (req, res) => {
 const updateDoctorProfile = async (req, res) => {
   try {
     const doctorId = req.params.id; // Assuming you are passing doctor ID in URL
-
-    // Directly assign req.body to updates
-    const updates = req.body;
-    console.log(`recived data are:${req.body}`);
-    console.log(req.body.fullName);
-    console.log(req.body.doctorName);
-      
-      console.log(req.body.clinicName);
     
+    // Validate doctorId format
+    if (!mongoose.Types.ObjectId.isValid(doctorId)) {
+      return res.status(400).json({ message: 'Invalid doctor ID format' });
+    }
+    console.log('Files:', req.files); // Log the received files
+
+    // Extract the update data from the request body
+    const updates = req.body;
+    const { fullName, doctorName, clinicName } = updates;
+
+  
+
+    console.log(`Received data:`, updates);
 
     // Handle file uploads if they exist
     const avatarLocalPath = req.files?.avatar?.[0]?.path;
 
-    // If an avatar is uploaded, upload it to Cloudinary and add URL to updates
+    // If an avatar is uploaded, upload it to Cloudinary and add the URL to updates
     if (avatarLocalPath) {
       const avatar = await uploadOnCloudinary(avatarLocalPath);
       updates.avatar = avatar.url; // Add avatar URL to updates
     }
 
-  
-
-    // Find the doctor and update the necessary fields
+    // Update the doctor profile in the database
     const updatedDoctor = await Doctor.findByIdAndUpdate(doctorId, updates, {
       new: true, // Returns the updated document
       runValidators: true, // Ensures the updates follow schema validation rules
     });
 
+    // Check if the doctor exists
     if (!updatedDoctor) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
-    // Respond with the updated doctor data
+
+    // If the update is successful, respond with the updated doctor data
     res.status(200).json({ message: 'Profile updated successfully', doctor: updatedDoctor });
   } catch (error) {
-    console.error(error); // Log error for debugging
+    console.error('Error updating profile:', error); // Log the error for debugging
     res.status(500).json({ message: 'Error updating profile', error });
   }
 };
+
 
 const getDoctorProfile = async (req, res) => {
   try {
