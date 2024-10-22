@@ -1,34 +1,23 @@
 import admin from 'firebase-admin';
 import { config } from 'dotenv';
-import fs from 'fs'; // Importing file system module to read the credentials file
 import { Notification } from './models/notification.model.js'; // Importing the Notification model
 
 // Load environment variables from .env file if present
 config();
 
 // Verify that GOOGLE_APPLICATION_CREDENTIALS is set
-const googleCredentialsPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-if (!googleCredentialsPath) {
+const googleCredentials = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+if (!googleCredentials) {
   console.error('GOOGLE_APPLICATION_CREDENTIALS is not set.');
   process.exit(1); // Exit the process if credentials are not set
 }
 
-console.log('Google credentials path:', googleCredentialsPath);
+console.log('Google credentials path:', googleCredentials);
 
 // Initialize Firebase Admin SDK
-try {
-  // Read the credentials file
-  const serviceAccount = JSON.parse(fs.readFileSync(googleCredentialsPath, 'utf-8'));
-  
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount), // Use service account credentials
-  });
-  
-  console.log('Firebase Admin SDK initialized successfully.');
-} catch (error) {
-  console.error('Error initializing Firebase Admin SDK:', error);
-  process.exit(1); // Exit the process on initialization failure
-}
+admin.initializeApp({
+  credential: admin.credential.applicationDefault(), // Use the application default credentials
+});
 
 const sendNotification = async (tokens, title, body, userType, userId) => {
   if (!Array.isArray(tokens) || tokens.length === 0) {
@@ -41,7 +30,7 @@ const sendNotification = async (tokens, title, body, userType, userId) => {
       title: title,
       body: body,
     },
-    // Ensure userId and userType are strings in the data payload
+    // Make sure userId and userType are strings in the data payload
     data: {
       userType: String(userType),
       userId: String(userId),  // Convert userId to a string
