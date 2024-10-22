@@ -162,7 +162,7 @@ export const createAppointment = async (req, res) => {
     const patientToken = patient.fcmToken;
     console.log("Doctor FCM Token:", doctorToken);
     console.log("Patient FCM Token:", patientToken);
-
+console.log("fcm token for notification");
     // Send notification to doctor
     if (doctorToken) {
       await sendNotification(
