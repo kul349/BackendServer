@@ -432,7 +432,6 @@ const updateDoctorProfile = async (req, res) => {
     // If the update is successful, respond with the updated doctor data
     res.status(200).json({ message: 'Profile updated successfully', doctor: updatedDoctor });
   } catch (error) {
-    console.error('Error updating profile:', error); // Log the error for debugging
     res.status(500).json({ message: 'Error updating profile', error });
   }
 };

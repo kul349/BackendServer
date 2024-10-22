@@ -27,9 +27,17 @@ router.route('/getalldoctors').get(getAllDoctors);
 router.route('/getAllDoctorsWithoutFilter').get(getAllDoctorsWithoutFilter);
 router.route('/addRating').post(addRating);
 router.route('/search-doctor').get(searchDoctor);
-router.route('/updateDoctor/:id').put(docverfyJWT,updateDoctorProfile);
 router.route('/doctor-details/:id').get(docverfyJWT,getDoctorProfile );
 router.route('/getRating/:doctorId').get(docverfyJWT,getDoctorRatings);
+router.route("/updateDoctor/:id").put(
+    upload.fields(
+        [{
+           name:"avatar",
+           maxCount:1,
+        }
+
+        ]),
+        updateDoctorProfile);
 
 
 
