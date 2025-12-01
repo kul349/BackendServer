@@ -4,6 +4,8 @@ import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+
 const generateAccessAndRefreshTokens = async (userId) => {
   try {
     const user = await User.findById(userId);
@@ -210,17 +212,31 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
   }
 })
 const changeCurrentPasswords = asyncHandler(async (req, res) => {
-  const {oldPassword,newPassword}=req.body;
- const user=await User.findById(req.user?.id);
- const isPasswordCorrect = await User.isPasswordCorrect(oldPassword);
- if(!isPasswordCorrect){
-  throw new ApiError(400,"Invalid old password");
-  user.password=newPassword;
-  await user.save({validateBeforeSave:false});
-  return res
-  .status(200)
-  .json(new ApiResponse(200,{},"change password successfully"))
- }
+  const { oldPassword, newPassword } = req.body;
 
-})
-export { registerUser, loginUser, logoutUser,refreshAccessToken };
+  // Retrieve the user from the database
+  const user = await User.findById(req.user?.id);
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
+
+  // Check if the old password is correct using the instance method
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, "Invalid old password");
+  }
+
+  // Update the password (middleware will hash it automatically)
+  user.password = newPassword;
+  
+  // Save the updated user information
+  await user.save();
+
+  // Return a success response
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changed successfully"));
+});
+
+
+export { registerUser, loginUser, logoutUser,refreshAccessToken,changeCurrentPasswords };

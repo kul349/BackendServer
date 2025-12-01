@@ -394,20 +394,32 @@ const searchDoctor = async (req, res) => {
 const updateDoctorProfile = async (req, res) => {
   try {
     const doctorId = req.params.id; // Assuming you are passing doctor ID in URL
-    
+
     // Validate doctorId format
     if (!mongoose.Types.ObjectId.isValid(doctorId)) {
       return res.status(400).json({ message: 'Invalid doctor ID format' });
     }
+
     console.log('Files:', req.files); // Log the received files
 
     // Extract the update data from the request body
     const updates = req.body;
-    const { fullName, doctorName, clinicName } = updates;
-
-  
+    const { fullName, doctorName, clinicName, latitude, longitude } = updates;
 
     console.log(`Received data:`, updates);
+
+    // Validate location coordinates if provided
+    if ((latitude && isNaN(latitude)) || (longitude && isNaN(longitude))) {
+      return res.status(400).json({ message: 'Invalid coordinates' });
+    }
+
+    // Handle location update if coordinates are provided
+    if (latitude && longitude) {
+      updates.location = {
+        type: 'Point',
+        coordinates: [parseFloat(longitude), parseFloat(latitude)], // Ensure the values are numbers
+      };
+    }
 
     // Handle file uploads if they exist
     const avatarLocalPath = req.files?.avatar?.[0]?.path;
@@ -432,6 +444,7 @@ const updateDoctorProfile = async (req, res) => {
     // If the update is successful, respond with the updated doctor data
     res.status(200).json({ message: 'Profile updated successfully', doctor: updatedDoctor });
   } catch (error) {
+    console.error('Error updating profile:', error);
     res.status(500).json({ message: 'Error updating profile', error });
   }
 };
